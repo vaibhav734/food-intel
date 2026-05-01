@@ -15,6 +15,8 @@ services:
         value: "null"
       - key: FOOD_INTEL_ENABLE_OPENFOODFACTS
         value: "true"
+      - key: FOOD_INTEL_PRODUCT_DB_URL
+        sync: false
       - key: FOOD_INTEL_CORS_ORIGINS
         sync: false
 

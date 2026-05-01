@@ -61,7 +61,12 @@ def get_product_lookup(
     """Pick the product lookup adapter (or None if disabled)."""
     if settings.enable_openfoodfacts:
         db_path = Path(settings.product_db_path) if settings.product_db_path else None
-        return MultiSourceLookup(usda_api_key=settings.usda_api_key or None, db_path=db_path)
+        db_url = settings.product_db_url or None
+        return MultiSourceLookup(
+            usda_api_key=settings.usda_api_key or None,
+            db_path=db_path,
+            db_url=db_url,
+        )
     return None
 
 

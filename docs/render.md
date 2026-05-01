@@ -37,10 +37,22 @@ Because the Render service uses `rootDir: frontend`, the static publish path is 
 
 During initial setup, Render should prompt you for:
 
+- `FOOD_INTEL_PRODUCT_DB_URL`
 - `FOOD_INTEL_CORS_ORIGINS`
 - `VITE_API_BASE`
 
 Use these values:
+
+### `FOOD_INTEL_PRODUCT_DB_URL`
+
+If you want the backend to use Supabase Postgres for barcode lookups, set this
+to your Supabase session pooler URL:
+
+```text
+postgresql://postgres.<project-ref>:<PASSWORD>@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
+```
+
+If this is empty, the backend falls back to the local SQLite lookup DB.
 
 ### `VITE_API_BASE`
 
@@ -76,6 +88,8 @@ That means:
 - scoring works without an LLM key
 - explanations use the deterministic null provider
 - barcode lookup remains enabled
+- Supabase Postgres is used when `FOOD_INTEL_PRODUCT_DB_URL` is set
+- otherwise the backend falls back to SQLite and then live Open Food Facts
 
 If you want LLM-backed explanations later, add one of these in Render:
 
@@ -132,6 +146,17 @@ Check:
 - `FOOD_INTEL_CORS_ORIGINS` points to the frontend Render URL
 
 If you update either value, trigger a redeploy for the affected service.
+
+### Supabase database is configured but barcode lookups still miss products
+
+Make sure you imported the SQLite catalog into Postgres first:
+
+```bash
+cd backend
+pip install -e ".[api]"
+export FOOD_INTEL_PRODUCT_DB_URL='postgresql://...'
+python scripts/sqlite_to_postgres.py
+```
 
 ## 8. Mobile App
 

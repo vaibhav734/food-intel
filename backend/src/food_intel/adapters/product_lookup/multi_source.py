@@ -16,10 +16,12 @@ OpenFoodFacts with missing sodium can be enriched by USDA data.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, Optional
 
 from food_intel.adapters.product_lookup.base import ProductLookup
 from food_intel.adapters.product_lookup import seed_lookup
+from food_intel.adapters.product_lookup.postgres_lookup import PostgresProductLookup
 from food_intel.adapters.product_lookup.sqlite_lookup import SqliteProductLookup
 from food_intel.core.models import NutritionFacts, Product
 
@@ -38,30 +40,44 @@ class MultiSourceLookup:
     merging the results to maximise data completeness.
     """
 
-    def __init__(self, usda_api_key: Optional[str] = None, db_path: Optional[Path] = None):
+    def __init__(
+        self,
+        usda_api_key: Optional[str] = None,
+        db_path: Optional[Path] = None,
+        db_url: Optional[str] = None,
+    ):
         self._usda_key = usda_api_key
+        self._postgres = PostgresProductLookup(db_url) if db_url else None
         self._sqlite = SqliteProductLookup(db_path) if db_path else SqliteProductLookup()
 
     def get_by_barcode(self, barcode: str) -> Optional[Product]:
         # 1. Seed data — offline, authoritative for known products
         product = seed_lookup.get_by_barcode(barcode)
-        if product is not None:
-            return product
-
-        # 2. Local SQLite DB (populated from OFF dump)
-        product = self._sqlite.get_by_barcode(barcode)
-        if product is not None:
-            return product
+        if product is None:
+            # 2. Hosted Postgres DB (preferred when configured)
+            if self._postgres is not None:
+                product = self._postgres.get_by_barcode(barcode)
+            # 3. Local SQLite DB (populated from OFF dump)
+            if product is None:
+                product = self._sqlite.get_by_barcode(barcode)
 
         try:
             import httpx
         except ImportError as exc:
+            if product is not None:
+                return product
             raise RuntimeError("httpx required; pip install httpx") from exc
 
         with httpx.Client(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as client:
-            product = _try_off(client, barcode, _OFF_BASE)
+            off_product = _try_off(client, barcode, _OFF_BASE)
+            if off_product is None:
+                off_product = _try_off(client, barcode, _OBF_BASE)
+
             if product is None:
-                product = _try_off(client, barcode, _OBF_BASE)
+                product = off_product
+            elif off_product is not None:
+                product = _merge_products(product, off_product)
+
             if product is not None and self._usda_key:
                 product = _enrich_from_usda(client, product, self._usda_key)
 
@@ -111,6 +127,14 @@ def _map_off_product(raw: dict[str, Any], barcode: str) -> Product:
     return Product(
         name=raw.get("product_name") or raw.get("generic_name") or "Unknown",
         barcode=barcode,
+        brand=(raw.get("brands") or "").strip() or None,
+        quantity=(raw.get("quantity") or "").strip() or None,
+        image_front_url=(raw.get("image_front_url") or raw.get("image_url") or "").strip() or None,
+        allergens=[
+            str(tag).strip()
+            for tag in (raw.get("allergens_tags") or [])
+            if str(tag).strip()
+        ],
         nutrition=NutritionFacts(
             calories_kcal=_f(n, "energy-kcal_100g"),
             sugar_g=_f(n, "sugars_100g"),
@@ -164,6 +188,33 @@ def _enrich_from_usda(client: Any, product: Product, api_key: str) -> Product:
     )
     product.nutrition = merged
     return product
+
+
+def _merge_products(primary: Product, fallback: Product) -> Product:
+    """Fill missing fields in primary with values from fallback."""
+    n = primary.nutrition
+    other = fallback.nutrition
+    primary.brand = primary.brand or fallback.brand
+    primary.quantity = primary.quantity or fallback.quantity
+    primary.image_front_url = primary.image_front_url or fallback.image_front_url
+    primary.allergens = primary.allergens or fallback.allergens
+    primary.ingredients_raw = primary.ingredients_raw or fallback.ingredients_raw
+    primary.nova_class = primary.nova_class or fallback.nova_class
+    if primary.product_type == "food" and fallback.product_type != "food":
+      primary.product_type = fallback.product_type
+
+    primary.nutrition = NutritionFacts(
+        calories_kcal=n.calories_kcal if n.calories_kcal is not None else other.calories_kcal,
+        sugar_g=n.sugar_g if n.sugar_g is not None else other.sugar_g,
+        saturated_fat_g=(
+            n.saturated_fat_g if n.saturated_fat_g is not None else other.saturated_fat_g
+        ),
+        sodium_mg=n.sodium_mg if n.sodium_mg is not None else other.sodium_mg,
+        protein_g=n.protein_g if n.protein_g is not None else other.protein_g,
+        fiber_g=n.fiber_g if n.fiber_g is not None else other.fiber_g,
+        serving_size_g=n.serving_size_g if n.serving_size_g is not None else other.serving_size_g,
+    )
+    return primary
 
 
 def _usda_float(nutrients: dict[str, Any], name: str) -> Optional[float]:

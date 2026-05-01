@@ -81,6 +81,8 @@ Environment variables (all prefixed `FOOD_INTEL_`, all optional):
 | `ANTHROPIC_API_KEY` | — | Required when `LLM_PROVIDER=anthropic` |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | Model for explanations |
 | `ENABLE_OPENFOODFACTS` | `true` | Whether `/product/{barcode}` is wired up |
+| `PRODUCT_DB_URL` | — | Hosted Postgres URL for barcode lookup; preferred over SQLite when set |
+| `PRODUCT_DB_PATH` | auto-detect | Override local SQLite lookup DB path |
 | `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins |
 
 Settings are loaded from `.env` if present.

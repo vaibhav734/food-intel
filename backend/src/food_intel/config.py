@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     enable_openfoodfacts: bool = True
     usda_api_key: str = ""
     product_db_path: str = ""  # override SQLite DB path; empty = auto-detect
+    product_db_url: str = ""   # hosted Postgres URL; preferred over SQLite when set
 
     # CORS
     cors_origins: str = "http://localhost:5173"  # vite dev server default
