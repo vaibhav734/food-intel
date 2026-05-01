@@ -1,2 +1,2 @@
-// Base URL — change to your VPS domain before building release APK
-const String kApiBase = 'https://YOUR_DOMAIN/api';
+// Render backend base URL used by the mobile app.
+const String kApiBase = 'https://food-intel-api.onrender.com';

@@ -31,7 +31,7 @@ The Blueprint creates:
 
 Backend settings come from `backend/`.
 Frontend settings come from `frontend/`.
-Because this repo is a monorepo, the static site's publish path is `frontend/dist`.
+Because the Render service uses `rootDir: frontend`, the static publish path is `dist`.
 
 ## 4. Required Environment Variables
 
