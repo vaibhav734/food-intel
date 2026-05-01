@@ -1,0 +1,41 @@
+# Quickstart:
+#
+#   docker compose up                                  → null provider, fully offline
+#   LLM_EXTRA=anthropic LLM_PROVIDER=anthropic \
+#     ANTHROPIC_API_KEY=sk-ant-... docker compose up   → with Claude
+#   LLM_EXTRA=openai LLM_PROVIDER=openai \
+#     OPENAI_API_KEY=sk-... docker compose up          → with OpenAI
+#
+# LLM_EXTRA picks which SDK is installed at build time. LLM_PROVIDER picks
+# which provider is selected at runtime. They should match — but if they
+# don't, the system falls back to the null provider rather than crashing.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      args:
+        LLM_EXTRA: ${LLM_EXTRA:-}
+    environment:
+      FOOD_INTEL_LLM_PROVIDER: ${LLM_PROVIDER:-null}
+      FOOD_INTEL_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      FOOD_INTEL_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      FOOD_INTEL_CORS_ORIGINS: http://localhost:8080
+      FOOD_INTEL_PRODUCT_DB_PATH: /data/products.db
+    volumes:
+      - ./backend/data:/data:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy

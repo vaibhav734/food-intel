@@ -1,0 +1,49 @@
+# Cosmetics ingredients catalog v1.0.0
+#
+# Maps ingredient names to flagged classes used by the cosmetics rules engine.
+# Sources: EWG Skin Deep, EU Cosmetics Regulation EC 1223/2009,
+#          Campaign for Safe Cosmetics.
+
+version: "1.0.0"
+
+named_additives:
+  # Parabens
+  - { match: "methylparaben",         class: paraben }
+  - { match: "ethylparaben",          class: paraben }
+  - { match: "propylparaben",         class: paraben }
+  - { match: "butylparaben",          class: paraben }
+  - { match: "isobutylparaben",       class: paraben }
+
+  # Formaldehyde releasers
+  - { match: "dmdm hydantoin",        class: formaldehyde_releaser }
+  - { match: "imidazolidinyl urea",   class: formaldehyde_releaser }
+  - { match: "diazolidinyl urea",     class: formaldehyde_releaser }
+  - { match: "quaternium-15",         class: formaldehyde_releaser }
+  - { match: "bronopol",              class: formaldehyde_releaser }
+
+  # Phthalates
+  - { match: "dibutyl phthalate",     class: phthalate }
+  - { match: "diethyl phthalate",     class: phthalate }
+  - { match: "dimethyl phthalate",    class: phthalate }
+  - { match: "dehp",                  class: phthalate }
+
+  # Synthetic fragrance
+  - { match: "fragrance",             class: synthetic_fragrance }
+  - { match: "parfum",                class: synthetic_fragrance }
+  - { match: "musk",                  class: synthetic_fragrance }
+
+  # Petrolatum / mineral oil
+  - { match: "petrolatum",            class: petrolatum }
+  - { match: "mineral oil",           class: petrolatum }
+  - { match: "paraffinum liquidum",   class: petrolatum }
+
+  # Sulfates
+  - { match: "sodium lauryl sulfate",         class: sulfate }
+  - { match: "sodium laureth sulfate",        class: sulfate }
+  - { match: "ammonium lauryl sulfate",       class: sulfate }
+  - { match: "ammonium laureth sulfate",      class: sulfate }
+
+  # Positive signals
+  - { match: "certified organic",     class: certified_organic }
+  - { match: "usda organic",          class: certified_organic }
+  - { match: "cosmos organic",        class: certified_organic }

@@ -1,0 +1,90 @@
+# Baby food rules configuration v1.0.0
+#
+# Stricter thresholds for products intended for infants and toddlers.
+# Sources: WHO infant feeding guidelines, EFSA NDA Panel on nutrient
+# requirements for infants, EU Regulation 609/2013 on processed cereal-based
+# foods and baby foods.
+#
+# All thresholds are per-100g (same convention as food rules).
+# These rules apply when product_type == "baby_food".
+
+version: "1.0.0"
+
+confidence_caps:
+  low: 5
+  medium: 8
+  high: 10
+
+verdict_bands:
+  - { min: 9, verdict: Excellent }
+  - { min: 7, verdict: Good }
+  - { min: 4, verdict: Moderate }
+  - { min: 0, verdict: Limit }
+
+rules:
+
+  # ---- Sugar — much stricter than adult food ----
+  - id: baby_sugar_high
+    nutrient: sugar_g
+    condition: { gt: 10.0 }
+    penalty: -7.0
+    text: "High sugar for infant/toddler product — exceeds EU baby food limit"
+    source:
+      org: EU Regulation 609/2013
+      type: guideline
+      doc: "Regulation (EU) No 609/2013 — processed cereal-based foods"
+
+  - id: baby_sugar_moderate
+    nutrient: sugar_g
+    condition: { between: [2.5, 10.0] }
+    interpolate: { from: 2.5, to: 10.0 }
+    penalty: -1.5
+    text: "Moderate sugar for infant/toddler product"
+    source:
+      org: EU Regulation 609/2013
+      type: guideline
+
+  # ---- Sodium — very strict for infants ----
+  - id: baby_sodium_high
+    nutrient: sodium_mg
+    condition: { gt: 200 }
+    penalty: -3.0
+    text: "High sodium for infant/toddler — infant kidneys cannot process excess salt"
+    source:
+      org: WHO
+      type: guideline
+      doc: "WHO: Complementary feeding — no added salt for infants under 12 months"
+
+  - id: baby_sodium_moderate
+    nutrient: sodium_mg
+    condition: { between: [50, 200] }
+    interpolate: { from: 50, to: 200 }
+    penalty: -1.0
+    text: "Elevated sodium for infant/toddler product"
+    source:
+      org: EFSA
+      type: guideline
+      doc: "EFSA NDA Panel — dietary reference values for sodium, infants"
+
+  # ---- Saturated fat ----
+  - id: baby_sat_fat_high
+    nutrient: saturated_fat_g
+    condition: { gt: 3.0 }
+    penalty: -2.0
+    text: "High saturated fat for infant/toddler product"
+    source:
+      org: EFSA
+      type: guideline
+      doc: "EFSA NDA Panel — dietary reference values for fats, infants"
+
+  # ---- Additives — zero tolerance for flagged additives in baby food ----
+  - id: baby_additives_flagged
+    field: flagged_additive_classes
+    condition: { count_gt: 0 }
+    per_unit_penalty: -2.0
+    cap: -4.0
+    text: "Contains flagged additives — not recommended in infant/toddler food"
+    source:
+      org: EFSA
+      type: guideline
+      doc: "EFSA: additives in foods for infants and young children"

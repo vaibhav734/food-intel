@@ -1,0 +1,110 @@
+# Cosmetics rules configuration v1.0.0
+#
+# Scores cosmetic/personal care products based on ingredient safety.
+# Sources: EWG Skin Deep database classifications, EU Cosmetics Regulation
+# (EC 1223/2009), Campaign for Safe Cosmetics.
+#
+# Rule contract is identical to food rules except:
+#   - `ingredient_flag` targets flagged_additive_classes (same field, reused)
+#   - All thresholds are ingredient-presence based (count_gt: 0)
+#
+# Confidence caps apply identically — no ingredients = no trustworthy score.
+
+version: "1.0.0"
+
+confidence_caps:
+  low: 5
+  medium: 8
+  high: 10
+
+verdict_bands:
+  - { min: 9, verdict: Excellent }
+  - { min: 7, verdict: Good }
+  - { min: 4, verdict: Moderate }
+  - { min: 0, verdict: Limit }
+
+rules:
+
+  # ---- High-concern ingredients ----
+
+  - id: cosmetic_parabens
+    field: flagged_additive_classes
+    condition: { contains: "paraben" }
+    penalty: -2.5
+    text: "Contains parabens — endocrine disruption concern"
+    source:
+      org: EU Cosmetics Regulation
+      type: guideline
+      doc: "EC 1223/2009 Annex V — restricted preservatives"
+
+  - id: cosmetic_formaldehyde_releaser
+    field: flagged_additive_classes
+    condition: { contains: "formaldehyde_releaser" }
+    penalty: -2.5
+    text: "Contains formaldehyde-releasing preservative — known carcinogen"
+    source:
+      org: IARC
+      type: guideline
+      doc: "IARC Group 1 carcinogen"
+
+  - id: cosmetic_phthalates
+    field: flagged_additive_classes
+    condition: { contains: "phthalate" }
+    penalty: -2.0
+    text: "Contains phthalates — endocrine disruption concern"
+    source:
+      org: EWG
+      type: guideline
+      doc: "EWG Skin Deep hazard score 7–10"
+
+  - id: cosmetic_synthetic_fragrance
+    field: flagged_additive_classes
+    condition: { contains: "synthetic_fragrance" }
+    penalty: -1.5
+    text: "Contains synthetic fragrance — common allergen and sensitizer"
+    source:
+      org: EWG
+      type: guideline
+      doc: "EWG Skin Deep: fragrance is a top allergen"
+
+  - id: cosmetic_petrolatum
+    field: flagged_additive_classes
+    condition: { contains: "petrolatum" }
+    penalty: -1.0
+    text: "Contains petrolatum/mineral oil — potential PAH contamination"
+    source:
+      org: EU Cosmetics Regulation
+      type: guideline
+      doc: "EC 1223/2009 — restricted unless refinery history known"
+
+  - id: cosmetic_sulfates
+    field: flagged_additive_classes
+    condition: { contains: "sulfate" }
+    penalty: -0.75
+    text: "Contains sulfates (SLS/SLES) — skin irritant"
+    source:
+      org: EWG
+      type: guideline
+      doc: "EWG Skin Deep hazard score 3–4"
+
+  # ---- Positive signals ----
+
+  - id: cosmetic_certified_organic
+    field: flagged_additive_classes
+    condition: { contains: "certified_organic" }
+    bonus: 1.5
+    text: "Contains certified organic ingredients"
+    source:
+      org: COSMOS
+      type: guideline
+      doc: "COSMOS organic certification standard"
+
+  - id: cosmetic_no_flagged_ingredients
+    field: flagged_additive_classes
+    condition: { count_lte: 0 }
+    bonus: 1.0
+    text: "No flagged ingredient classes detected"
+    source:
+      org: EWG
+      type: guideline
+      doc: "EWG Skin Deep clean rating"

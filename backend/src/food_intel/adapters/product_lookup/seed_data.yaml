@@ -1,0 +1,73 @@
+# Known product seed data
+#
+# Products that exist in barcode databases but have missing nutrition data.
+# Values sourced from official product labels / manufacturer websites.
+# Each entry is keyed by barcode. Multiple barcodes can map to the same product
+# (different pack sizes often share nutrition per 100g).
+#
+# Source field is required for every entry — no anonymous data.
+# To add a product: append an entry, cite the source, bump nothing (no versioning needed).
+
+products:
+
+  # Bournvita (Mondelez India) — per 100g as printed on label
+  # Source: Mondelez India product label / FSSAI nutrition declaration
+  "8901030874048":
+    name: "Bournvita 500g"
+    nova_class: 4
+    nutrition:
+      calories_kcal: 383
+      sugar_g: 73.0
+      saturated_fat_g: 1.5
+      sodium_mg: 200
+      protein_g: 7.5
+      fiber_g: 1.2
+      serving_size_g: 20
+    ingredients_raw: "Sugar, Malt Extract (Wheat), Cocoa Solids, Milk Solids, Vitamins (Vitamin A, Vitamin D, Vitamin C, Niacin, Vitamin B6, Vitamin B2, Vitamin B1, Folic Acid), Minerals (Iron, Calcium, Phosphorus, Magnesium, Zinc, Iodine), Raising Agent (503(ii)), Emulsifier (322(i)), Artificial Flavour (Vanilla)"
+    source: "Mondelez India product label (FSSAI nutrition declaration)"
+
+  "7622202309830":
+    name: "Bournvita 200g"
+    nova_class: 4
+    nutrition:
+      calories_kcal: 383
+      sugar_g: 73.0
+      saturated_fat_g: 1.5
+      sodium_mg: 200
+      protein_g: 7.5
+      fiber_g: 1.2
+      serving_size_g: 20
+    ingredients_raw: "Sugar, Malt Extract (Wheat), Cocoa Solids, Milk Solids, Vitamins, Minerals, Raising Agent (503(ii)), Emulsifier (322(i)), Artificial Flavour (Vanilla)"
+    source: "Mondelez India product label (FSSAI nutrition declaration)"
+
+  # Maggi 2-Minute Noodles (Nestle India)
+  # Source: Nestle India product label
+  "8901058852893":
+    name: "Maggi 2-Minute Noodles Masala"
+    nova_class: 4
+    nutrition:
+      calories_kcal: 436
+      sugar_g: 2.5
+      saturated_fat_g: 6.5
+      sodium_mg: 1020
+      protein_g: 9.5
+      fiber_g: 2.0
+      serving_size_g: 70
+    ingredients_raw: "Wheat flour, Palm oil, Salt, Sugar, Spices, Onion powder, Garlic powder, Flavour enhancer (E621), Acidity regulator (E330)"
+    source: "Nestle India product label (FSSAI nutrition declaration)"
+
+  # Amul Butter
+  # Source: Amul product label
+  "8901063000057":
+    name: "Amul Butter"
+    nova_class: 2
+    nutrition:
+      calories_kcal: 720
+      sugar_g: 0.5
+      saturated_fat_g: 45.0
+      sodium_mg: 640
+      protein_g: 0.5
+      fiber_g: 0.0
+      serving_size_g: 10
+    ingredients_raw: "Pasteurised cream, Common salt"
+    source: "Amul product label (FSSAI nutrition declaration)"

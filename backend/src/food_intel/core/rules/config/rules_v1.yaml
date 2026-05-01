@@ -1,0 +1,157 @@
+# Rules configuration v1.0.0
+#
+# This file is the source of truth for scoring thresholds and weights.
+# Every score produced records which version of this file generated it,
+# so historical scores remain reproducible after rule tuning.
+#
+# All thresholds are per-100g unless otherwise stated. Per-serving inputs
+# are normalized upstream by core/normalization.py before reaching the
+# rules engine.
+#
+# Rule contract:
+#   - exactly one of `penalty` (negative delta) or `bonus` (positive delta)
+#   - `condition` describes when the rule fires
+#   - `interpolate` (optional): if present, delta scales linearly from 0
+#     to the full value as the observed nutrient moves from `from` to `to`
+#
+# Adding a new rule: append here, bump version, update tests/golden/
+# scoring_snapshots.json with new expected scores.
+
+version: "1.1.0"
+
+# Confidence-based score caps.
+# A product with LOW confidence cannot score above 5 — missing critical
+# nutrition data means we cannot make a trustworthy positive claim.
+# A product with MEDIUM confidence is capped at 8.
+# HIGH confidence has no cap (full 0–10 range).
+# This prevents the "10/10 with no data" false-positive problem.
+confidence_caps:
+  low: 5
+  medium: 8
+  high: 10
+
+verdict_bands:
+  # score >= threshold → verdict
+  - { min: 9, verdict: Excellent }
+  - { min: 7, verdict: Good }
+  - { min: 4, verdict: Moderate }
+  - { min: 0, verdict: Limit }
+
+rules:
+
+  # ---- Sugar ----
+  - id: sugar_high
+    nutrient: sugar_g
+    condition: { gt: 22.5 }
+    penalty: -2.5
+    text: "High sugar relative to guideline"
+    source:
+      org: WHO
+      type: guideline
+      doc: "Guideline: Sugars intake for adults and children, 2015"
+
+  - id: sugar_moderate
+    nutrient: sugar_g
+    condition: { between: [5.0, 22.5] }
+    interpolate: { from: 5.0, to: 22.5 }
+    penalty: -1.0
+    text: "Moderate sugar level"
+    source:
+      org: UK FSA
+      type: guideline
+      doc: "Front-of-pack nutrition labelling guidance"
+
+  # ---- Saturated fat ----
+  - id: sat_fat_high
+    nutrient: saturated_fat_g
+    condition: { gt: 5.0 }
+    penalty: -2.0
+    text: "High saturated fat relative to guideline"
+    source:
+      org: UK FSA
+      type: guideline
+
+  - id: sat_fat_moderate
+    nutrient: saturated_fat_g
+    condition: { between: [1.5, 5.0] }
+    interpolate: { from: 1.5, to: 5.0 }
+    penalty: -0.75
+    text: "Moderate saturated fat"
+    source:
+      org: UK FSA
+      type: guideline
+
+  # ---- Sodium ----
+  - id: sodium_high
+    nutrient: sodium_mg
+    condition: { gt: 600 }
+    penalty: -2.0
+    text: "High sodium relative to guideline"
+    source:
+      org: WHO
+      type: guideline
+      doc: "Guideline: Sodium intake for adults and children, 2012"
+
+  - id: sodium_moderate
+    nutrient: sodium_mg
+    condition: { between: [120, 600] }
+    interpolate: { from: 120, to: 600 }
+    penalty: -0.75
+    text: "Moderate sodium level"
+    source:
+      org: UK FSA
+      type: guideline
+
+  # ---- Protein ----
+  - id: protein_low
+    nutrient: protein_g
+    condition: { lt: 3.0 }
+    penalty: -0.5
+    text: "Low protein content"
+    source:
+      org: USDA
+      type: guideline
+
+  - id: protein_high
+    nutrient: protein_g
+    condition: { gte: 8.0 }
+    bonus: 1.0
+    text: "Good protein content"
+    source:
+      org: USDA
+      type: guideline
+
+  # ---- Fiber ----
+  - id: fiber_high
+    nutrient: fiber_g
+    condition: { gte: 6.0 }
+    bonus: 1.5
+    text: "High fiber content"
+    source:
+      org: FDA
+      type: guideline
+      doc: "FDA: 'Excellent source' = ≥20% DV"
+
+  # ---- Additives & processing ----
+  # These rules read from product fields, not nutrition. They are evaluated
+  # by the engine via a different code path but use the same Rule contract.
+  - id: additives_flagged
+    field: flagged_additive_classes
+    condition: { count_gt: 0 }
+    per_unit_penalty: -1.0
+    cap: -2.0
+    text: "Contains flagged additive classes"
+    source:
+      org: EFSA
+      type: guideline
+      doc: "EU food additives database"
+
+  - id: ultra_processed
+    field: nova_class
+    condition: { eq: 4 }
+    penalty: -1.5
+    text: "Ultra-processed food (NOVA category 4)"
+    source:
+      org: NOVA
+      type: guideline
+      doc: "Monteiro et al., NOVA classification system"

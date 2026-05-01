@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Data — DB and dump files are large, generated locally
+backend/data/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+
+# Env
+.env
+*.env

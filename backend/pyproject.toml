@@ -1,0 +1,59 @@
+[project]
+name = "food-intel-backend"
+version = "0.1.0"
+description = "Food Intelligence Platform — deterministic core + API"
+requires-python = ">=3.11"
+# Core runtime dependencies — what the deterministic core + API need.
+# Without these, nothing works.
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# `api` brings up the HTTP server. Required for `uvicorn ... api.app:app`.
+# httpx is a runtime dep here because the OpenFoodFacts adapter uses it
+# (and it's also what fastapi.testclient depends on, conveniently).
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic-settings>=2.1",
+    "httpx>=0.27",
+]
+
+# Test runner — requires `api` because integration tests use TestClient.
+dev = [
+    "pytest>=7.4",
+]
+
+# LLM provider SDKs — install whichever you intend to use.
+# The adapters lazy-import these, so you can install just one.
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+
+# Convenience: `pip install -e ".[all]"` for the full setup
+all = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic-settings>=2.1",
+    "httpx>=0.27",
+    "pytest>=7.4",
+    "anthropic>=0.40",
+    "openai>=1.40",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+
+# Include the rules YAML files inside the installed package
+[tool.setuptools.package-data]
+food_intel = ["core/rules/config/*.yaml"]

@@ -1,0 +1,112 @@
+# Additives catalog
+#
+# Maps E-numbers and common additive names to the flagged classes used by
+# the rules engine. The "class" field maps to `flagged_additive_classes`
+# on Product, which the additives_flagged rule counts.
+#
+# Sources:
+#   - EU Food Additives Database (E-number ranges)
+#   - EFSA re-evaluation reports (which additives flag as concern)
+#   - NOVA classification "cosmetic additives" category
+#
+# This is a curated subset, not exhaustive. Adding entries: append here,
+# bump the version, and add a test fixture with the new ingredient.
+
+version: "1.0.0"
+
+# E-number range → default class. Matched first; specific overrides below win.
+e_number_ranges:
+  - { from: 100, to: 199, class: color }
+  - { from: 200, to: 299, class: preservative }
+  - { from: 300, to: 321, class: antioxidant }
+  - { from: 322, to: 399, class: emulsifier }       # incl. lecithins, stabilizers
+  - { from: 400, to: 499, class: stabilizer }       # thickeners, gelling agents
+  - { from: 500, to: 599, class: acidity_regulator }
+  - { from: 600, to: 699, class: flavor_enhancer }  # MSG family
+  - { from: 900, to: 999, class: glazing_agent }
+  - { from: 950, to: 969, class: sweetener }        # artificial sweeteners
+
+# Named additives — these match by substring (case-insensitive) in the
+# raw ingredient string. Use for ingredients commonly written without
+# E-numbers on US/UK labels.
+named_additives:
+  # Sweeteners
+  - { match: "aspartame",         class: sweetener }
+  - { match: "sucralose",         class: sweetener }
+  - { match: "saccharin",         class: sweetener }
+  - { match: "acesulfame",        class: sweetener }
+  - { match: "stevia extract",    class: sweetener }
+
+  # Flavor enhancers
+  - { match: "monosodium glutamate", class: flavor_enhancer }
+  - { match: "msg",               class: flavor_enhancer }
+  - { match: "disodium inosinate",   class: flavor_enhancer }
+  - { match: "disodium guanylate",   class: flavor_enhancer }
+
+  # Preservatives
+  - { match: "sodium benzoate",   class: preservative }
+  - { match: "potassium sorbate", class: preservative }
+  - { match: "sodium nitrite",    class: preservative }
+  - { match: "sodium nitrate",    class: preservative }
+  - { match: "bha",               class: preservative }
+  - { match: "bht",               class: preservative }
+  - { match: "tbhq",              class: preservative }
+
+  # Colors
+  - { match: "tartrazine",        class: color }
+  - { match: "caramel color",     class: color }
+  - { match: "annatto",           class: color }
+  - { match: "red 40",            class: color }
+  - { match: "yellow 5",          class: color }
+  - { match: "yellow 6",          class: color }
+  - { match: "blue 1",            class: color }
+
+  # Emulsifiers / stabilizers
+  - { match: "soy lecithin",      class: emulsifier }
+  - { match: "mono- and diglycerides", class: emulsifier }
+  - { match: "carrageenan",       class: stabilizer }
+  - { match: "xanthan gum",       class: stabilizer }
+  - { match: "guar gum",          class: stabilizer }
+
+# Categories for general ingredient classification (not "flagged" but useful
+# for explanation and for future rules — e.g. "contains added sugars").
+ingredient_categories:
+  added_sugars:
+    - sugar
+    - sucrose
+    - glucose syrup
+    - high fructose corn syrup
+    - corn syrup
+    - dextrose
+    - fructose
+    - maltodextrin
+    - cane sugar
+    - invert sugar
+    - molasses
+    - honey            # technically natural, but counts as added sugar nutritionally
+
+  oils_and_fats:
+    - palm oil
+    - palm kernel oil
+    - hydrogenated
+    - partially hydrogenated
+    - shortening
+    - lard
+    - coconut oil
+    - sunflower oil
+    - canola oil
+    - rapeseed oil
+    - olive oil
+    - vegetable oil
+
+  whole_foods:
+    - oats
+    - rolled oats
+    - whole wheat
+    - whole grain
+    - brown rice
+    - quinoa
+    - lentils
+    - chickpeas
+    - almonds
+    - walnuts
