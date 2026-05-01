@@ -31,6 +31,7 @@ The Blueprint creates:
 
 Backend settings come from `backend/`.
 Frontend settings come from `frontend/`.
+Because this repo is a monorepo, the static site's publish path is `frontend/dist`.
 
 ## 4. Required Environment Variables
 
@@ -151,3 +152,5 @@ const String kApiBase = 'https://food-intel-api.onrender.com';
 ```
 
 Use your actual backend hostname if Render assigned a different one.
+
+This mobile URL should be the backend root URL, not `/api`.
